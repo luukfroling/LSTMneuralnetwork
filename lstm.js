@@ -102,9 +102,9 @@ class neuralNetwork {
     //this.output.show();
   }
 
-/* A function to run through the array of input data.
-*  Takes input as a parameter. this function must safe all the actions so we can look back at it through time.
-*/
+  /* A function to run through the array of input data.
+  *  Takes input as a parameter. this function must safe all the actions so we can look back at it through time.
+  */
 
   trainingRun(input){
     this.resetTime();
@@ -113,12 +113,12 @@ class neuralNetwork {
     }
   }
 
-/* As the amount of input changes, we will want to change the numbers of inputs and the number of outputs.
-*  To do this we need to change the matrices.
-*  addInput and addOuput are both functions from the matrix class to add a column or a row.
-*  NOTE you need to change the data as well. If you pass in the data with incorrect sizes
-*  an error will occur.
-*/
+  /* As the amount of input changes, we will want to change the numbers of inputs and the number of outputs.
+  *  To do this we need to change the matrices.
+  *  addInput and addOuput are both functions from the matrix class to add a column or a row.
+  *  NOTE you need to change the data as well. If you pass in the data with incorrect sizes
+  *  an error will occur.
+  */
 
   addInput(){
     //Here we need to change all the weights which use the input values.
@@ -134,24 +134,48 @@ class neuralNetwork {
     this.Who = Matrix.addOutput(this.Who);
   }
 
-/* Weneed a function we can call to actually use the network.
-*  TrainingRun is used to run the network without any output/console.log.
-*  Run will output the result and return it inside of a string for further data processing.
-*/
+  /* Weneed a function we can call to actually use the network.
+  *  TrainingRun is used to run the network without any output/console.log.
+  *  Run will output the result and return it inside of a string for further data processing.
+  */
 
   run(input){
     this.resetTime();
     for(let i = 0; i < input.length; i++){
       this.pInput.push(input[i]);
       this.activate(input[i]);
-      this.c.show();
     }
     return Matrix.toArray(this.output);
   }
 
-/* A training function. takes array of input and array of desired output as parameters.
-*  We must loop through all the inputs to create the through time effect.
-*/
+  /* So a different run function which returns an array with only 1 value made high.
+  *  this has a better preactical use in the implementation of the neural network.
+  */
+  runResult(input){
+    this.resetTime();
+    for(let i = 0; i < input.length; i++){
+      this.pInput.push(input[i]);
+      this.activate(input[i]);
+    }
+
+    let topIndex = 0; let top = 0;
+    let output = Matrix.toArray(this.output);
+    let result = new Array(output.length);
+    result.fill(0);
+
+    for(let i = 0; i < output.length; i++){
+      if(output[i] > top){
+        topIndex = i;
+        top = output[i];
+      }
+    }
+
+    result[topIndex] = 1;
+    return result;
+  }
+  /* A training function. takes array of input and array of desired output as parameters.
+  *  We must loop through all the inputs to create the through time effect.
+  */
   train(input, desired){
     this.trainingRun(input);
     let error = Matrix.substract(Matrix.fromArray(desired), this.output);
@@ -196,7 +220,7 @@ class neuralNetwork {
       //console.log("in here");
       let Tinput = Matrix.transpose(this.pInput[t-i]);
 
-    //  this.WfB += error.getSum();
+      //  this.WfB += error.getSum();
       let WfC = Matrix.product(error, Tinput);
 
 
@@ -221,23 +245,44 @@ class neuralNetwork {
   *  This will restore it back to default settings.
   *  The time 'memomry' consits of a couple of arrays don't forgett.
   */
-    resetTime(){
-      this.pInput = new Array();
-      this.pHidden = new Array();
-      this.pOutput = new Array();
-      this.pc = new Array();
-      this.pf = new Array();
-      this.pi = new Array();
-      this.pg = new Array();
-      this.po = new Array();
-      //Fill pHidden with 0's.
-      let temp = new Matrix(this.netconfig[1]);
-      temp.fill(0);
-      this.pHidden.push(temp);
-      this.pc.push(temp);
-      this.c = new Matrix(this.netconfig[1]);
-      this.c.fill(0);
-    }
+  resetTime(){
+    this.pInput = new Array();
+    this.pHidden = new Array();
+    this.pOutput = new Array();
+    this.pc = new Array();
+    this.pf = new Array();
+    this.pi = new Array();
+    this.pg = new Array();
+    this.po = new Array();
+    //Fill pHidden with 0's.
+    let temp = new Matrix(this.netconfig[1]);
+    temp.fill(0);
+    this.pHidden.push(temp);
+    this.pc.push(temp);
+    this.c = new Matrix(this.netconfig[1]);
+    this.c.fill(0);
+  }
+
+/* A function we want to use to change the data we get from a json file into
+*  a working object. We need to convert the objects into the matrix class so we can
+*/
+  static fromJSON(data){
+    let result = new neuralNetwork(data.netconfig);
+    result.Wf = Matrix.fromJSON(data.Wf);
+    result.Wg = Matrix.fromJSON(data.Wg);
+    result.Who = Matrix.fromJSON(data.Who);
+    result.Wi = Matrix.fromJSON(data.Wi);
+    result.Wo = Matrix.fromJSON(data.Wo);
+    result.c = Matrix.fromJSON(data.c);
+    result.cellInput = Matrix.fromJSON(data.cellInput);
+    result.f = Matrix.fromJSON(data.f);
+    result.g = Matrix.fromJSON(data.g);
+    result.hidden = Matrix.fromJSON(data.hidden);
+    result.i = Matrix.fromJSON(data.i);
+    result.o = Matrix.fromJSON(data.o);
+    result.output = Matrix.fromJSON(data.output);
+    return result;
+  }
 }
 
 function sigmoid(x) {
